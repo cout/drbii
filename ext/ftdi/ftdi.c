@@ -39,6 +39,20 @@ static VALUE ftdi_context_open(VALUE self, VALUE v_desc)
   return Qnil;
 }
 
+static VALUE ftdi_context_set_baudrate(VALUE self, VALUE v_baud)
+{
+  struct ftdi_context * ctx;
+  int baud = NUM2INT(v_baud);
+  int result;
+
+  Data_Get_Struct(self, struct ftdi_context, ctx);
+
+  result = ftdi_set_baudrate(ctx, baud);
+  check_ftdi_result(ctx, result);
+
+  return Qnil;
+}
+
 static VALUE ftdi_context_set_bitmode(VALUE self, VALUE v_bitmask, VALUE v_mode)
 {
   struct ftdi_context * ctx;
@@ -94,12 +108,12 @@ void Init_ftdi()
   rb_cFtdi_Context = rb_define_class_under(rb_mFtdi, "Context", rb_cObject);
   rb_define_singleton_method(rb_cFtdi_Context, "new", ftdi_context_s_new, 0);
   rb_define_method(rb_cFtdi_Context, "open", ftdi_context_open, 1);
+  rb_define_method(rb_cFtdi_Context, "baudrate=", ftdi_context_set_baudrate, 1);
   rb_define_method(rb_cFtdi_Context, "set_bitmode", ftdi_context_set_bitmode, 2);
   rb_define_method(rb_cFtdi_Context, "read_data", ftdi_context_read_data, 1);
   rb_define_method(rb_cFtdi_Context, "write_data", ftdi_context_write_data, 1);
 
   rb_define_const(rb_mFtdi, "BITMODE_RESET", INT2NUM(BITMODE_RESET));
-  rb_define_const(rb_mFtdi, "BITMODE_BITBANG", INT2NUM(BITMODE_BITBANG));
   rb_define_const(rb_mFtdi, "BITMODE_BITBANG", INT2NUM(BITMODE_BITBANG));
   rb_define_const(rb_mFtdi, "BITMODE_MPSSE", INT2NUM(BITMODE_MPSSE));
   rb_define_const(rb_mFtdi, "BITMODE_SYNCBB", INT2NUM(BITMODE_SYNCBB));
