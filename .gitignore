@@ -3,3 +3,4 @@
 .*.swp
 *.so
 ext/ftdi/Makefile
+ext/ftdi/mkmf.log
