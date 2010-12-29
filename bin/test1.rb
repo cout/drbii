@@ -1,6 +1,6 @@
-require 'smec/smec'
-require 'smec/memory_map'
-require 'smec/ftdi_io'
+require 'drbii/smec'
+require 'drbii/memory_map'
+require 'drbii/ftdi_io'
 
 if __FILE__ == $0 then
   source_filename = ARGV[0]
@@ -9,8 +9,8 @@ if __FILE__ == $0 then
   ftdi_dev = ARGV[1]
   ftdi = FtdiIO.new(ftdi_dev, true)
 
-  smec = SMEC.new(ftdi)
-  smec.handshake()
+  drbii = DRBII.new(ftdi)
+  drbii.handshake()
   puts mmap.read_location(mmap['RPM'])
 end
 

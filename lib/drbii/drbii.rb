@@ -2,9 +2,12 @@ require 'smec/smec_drb'
 
 require 'logger'
 
-class SMEC
-  BAUD_LOWSPEED = 976
-  BAUD_HIGHSPEED = 7812
+class DRBII
+  # BAUD_LOWSPEED = 976
+  # BAUD_HIGHSPEED = 7812
+
+  BAUD_LOWSPEED = 7812
+  BAUD_HIGHSPEED = 62500
 
   def initialize(io, baud=BAUD_LOWSPEED)
     @io = io

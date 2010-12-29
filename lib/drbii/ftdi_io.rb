@@ -1,13 +1,13 @@
 require 'timeout'
-require 'ftdi'
+require 'ftdic'
 
 class FtdiIO
   def initialize(dev, bitbang=true)
-    @ftdi = Ftdi::Context.new
+    @ftdi = FtdiC::Context.new
     @ftdi.open(dev)
 
     if bitbang then
-      @ftdi.set_bitmode(0xFF, Ftdi::BITMODE_BITBANG)
+      @ftdi.set_bitmode(0xFF, FtdiC::BITMODE_BITBANG)
     end
   end
 

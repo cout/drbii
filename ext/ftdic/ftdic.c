@@ -1,7 +1,7 @@
 #include <ftdi.h>
 #include <ruby.h>
 
-static VALUE rb_mFtdi;
+static VALUE rb_mFtdiCC;
 static VALUE rb_cFtdi_Context;
 
 static void check_ftdi_result(struct ftdi_context * ctx, int result)
@@ -143,9 +143,9 @@ static VALUE ftdi_context_write_data(VALUE self, VALUE v_str)
 
 void Init_ftdi()
 {
-  rb_mFtdi = rb_define_module("Ftdi");
+  rb_mFtdiC = rb_define_module("FtdiC");
 
-  rb_cFtdi_Context = rb_define_class_under(rb_mFtdi, "Context", rb_cObject);
+  rb_cFtdi_Context = rb_define_class_under(rb_mFtdiC, "Context", rb_cObject);
   rb_define_singleton_method(rb_cFtdi_Context, "new", ftdi_context_s_new, 0);
   rb_define_method(rb_cFtdi_Context, "open", ftdi_context_open, 1);
   rb_define_method(rb_cFtdi_Context, "close", ftdi_context_close, 0);
@@ -156,56 +156,56 @@ void Init_ftdi()
   rb_define_method(rb_cFtdi_Context, "read_data", ftdi_context_read_data, 1);
   rb_define_method(rb_cFtdi_Context, "write_data", ftdi_context_write_data, 1);
 
-  rb_define_const(rb_mFtdi, "BITMODE_RESET", INT2NUM(BITMODE_RESET));
-  rb_define_const(rb_mFtdi, "BITMODE_BITBANG", INT2NUM(BITMODE_BITBANG));
-  rb_define_const(rb_mFtdi, "BITMODE_MPSSE", INT2NUM(BITMODE_MPSSE));
-  rb_define_const(rb_mFtdi, "BITMODE_SYNCBB", INT2NUM(BITMODE_SYNCBB));
-  rb_define_const(rb_mFtdi, "BITMODE_MCU", INT2NUM(BITMODE_MCU));
-  rb_define_const(rb_mFtdi, "BITMODE_OPTO", INT2NUM(BITMODE_OPTO));
-  rb_define_const(rb_mFtdi, "BITMODE_CBUS", INT2NUM(BITMODE_CBUS));
-  rb_define_const(rb_mFtdi, "BITMODE_SYNCFF", INT2NUM(BITMODE_SYNCFF));
+  rb_define_const(rb_mFtdiC, "BITMODE_RESET", INT2NUM(BITMODE_RESET));
+  rb_define_const(rb_mFtdiC, "BITMODE_BITBANG", INT2NUM(BITMODE_BITBANG));
+  rb_define_const(rb_mFtdiC, "BITMODE_MPSSE", INT2NUM(BITMODE_MPSSE));
+  rb_define_const(rb_mFtdiC, "BITMODE_SYNCBB", INT2NUM(BITMODE_SYNCBB));
+  rb_define_const(rb_mFtdiC, "BITMODE_MCU", INT2NUM(BITMODE_MCU));
+  rb_define_const(rb_mFtdiC, "BITMODE_OPTO", INT2NUM(BITMODE_OPTO));
+  rb_define_const(rb_mFtdiC, "BITMODE_CBUS", INT2NUM(BITMODE_CBUS));
+  rb_define_const(rb_mFtdiC, "BITMODE_SYNCFF", INT2NUM(BITMODE_SYNCFF));
 
-  rb_define_const(rb_mFtdi, "INTERFACE_ANY", INT2NUM(INTERFACE_ANY));
-  rb_define_const(rb_mFtdi, "INTERFACE_A", INT2NUM(INTERFACE_A));
-  rb_define_const(rb_mFtdi, "INTERFACE_B", INT2NUM(INTERFACE_B));
-  rb_define_const(rb_mFtdi, "INTERFACE_C", INT2NUM(INTERFACE_C));
-  rb_define_const(rb_mFtdi, "INTERFACE_D", INT2NUM(INTERFACE_D));
+  rb_define_const(rb_mFtdiC, "INTERFACE_ANY", INT2NUM(INTERFACE_ANY));
+  rb_define_const(rb_mFtdiC, "INTERFACE_A", INT2NUM(INTERFACE_A));
+  rb_define_const(rb_mFtdiC, "INTERFACE_B", INT2NUM(INTERFACE_B));
+  rb_define_const(rb_mFtdiC, "INTERFACE_C", INT2NUM(INTERFACE_C));
+  rb_define_const(rb_mFtdiC, "INTERFACE_D", INT2NUM(INTERFACE_D));
 
-  rb_define_const(rb_mFtdi, "TYPE_AM", INT2NUM(TYPE_AM));
-  rb_define_const(rb_mFtdi, "TYPE_BM", INT2NUM(TYPE_BM));
-  rb_define_const(rb_mFtdi, "TYPE_R", INT2NUM(TYPE_R));
-  rb_define_const(rb_mFtdi, "TYPE_2232H", INT2NUM(TYPE_2232H));
-  rb_define_const(rb_mFtdi, "TYPE_4232H", INT2NUM(TYPE_4232H));
+  rb_define_const(rb_mFtdiC, "TYPE_AM", INT2NUM(TYPE_AM));
+  rb_define_const(rb_mFtdiC, "TYPE_BM", INT2NUM(TYPE_BM));
+  rb_define_const(rb_mFtdiC, "TYPE_R", INT2NUM(TYPE_R));
+  rb_define_const(rb_mFtdiC, "TYPE_2232H", INT2NUM(TYPE_2232H));
+  rb_define_const(rb_mFtdiC, "TYPE_4232H", INT2NUM(TYPE_4232H));
 
-  rb_define_const(rb_mFtdi, "NONE", INT2NUM(NONE));
-  rb_define_const(rb_mFtdi, "ODD", INT2NUM(ODD));
-  rb_define_const(rb_mFtdi, "EVEN", INT2NUM(EVEN));
-  rb_define_const(rb_mFtdi, "MARK", INT2NUM(MARK));
-  rb_define_const(rb_mFtdi, "SPACE", INT2NUM(SPACE));
+  rb_define_const(rb_mFtdiC, "NONE", INT2NUM(NONE));
+  rb_define_const(rb_mFtdiC, "ODD", INT2NUM(ODD));
+  rb_define_const(rb_mFtdiC, "EVEN", INT2NUM(EVEN));
+  rb_define_const(rb_mFtdiC, "MARK", INT2NUM(MARK));
+  rb_define_const(rb_mFtdiC, "SPACE", INT2NUM(SPACE));
 
-  rb_define_const(rb_mFtdi, "STOP_BIT_1", INT2NUM(STOP_BIT_1));
-  rb_define_const(rb_mFtdi, "STOP_BIT_15", INT2NUM(STOP_BIT_15));
-  rb_define_const(rb_mFtdi, "STOP_BIT_2", INT2NUM(STOP_BIT_2));
+  rb_define_const(rb_mFtdiC, "STOP_BIT_1", INT2NUM(STOP_BIT_1));
+  rb_define_const(rb_mFtdiC, "STOP_BIT_15", INT2NUM(STOP_BIT_15));
+  rb_define_const(rb_mFtdiC, "STOP_BIT_2", INT2NUM(STOP_BIT_2));
 
-  rb_define_const(rb_mFtdi, "BITS_7", INT2NUM(BITS_7));
-  rb_define_const(rb_mFtdi, "BITS_8", INT2NUM(BITS_8));
+  rb_define_const(rb_mFtdiC, "BITS_7", INT2NUM(BITS_7));
+  rb_define_const(rb_mFtdiC, "BITS_8", INT2NUM(BITS_8));
 
-  rb_define_const(rb_mFtdi, "BREAK_OFF", INT2NUM(BREAK_OFF));
-  rb_define_const(rb_mFtdi, "BREAK_ON", INT2NUM(BREAK_ON));
+  rb_define_const(rb_mFtdiC, "BREAK_OFF", INT2NUM(BREAK_OFF));
+  rb_define_const(rb_mFtdiC, "BREAK_ON", INT2NUM(BREAK_ON));
 
-  rb_define_const(rb_mFtdi, "MPSSE_WRITE_NEG", INT2NUM(MPSSE_WRITE_NEG));
-  rb_define_const(rb_mFtdi, "MPSSE_BITMODE", INT2NUM(MPSSE_BITMODE));
-  rb_define_const(rb_mFtdi, "MPSSE_READ_NEG", INT2NUM(MPSSE_READ_NEG));
-  rb_define_const(rb_mFtdi, "MPSSE_LSB", INT2NUM(MPSSE_LSB));
-  rb_define_const(rb_mFtdi, "MPSSE_DO_WRITE", INT2NUM(MPSSE_DO_WRITE));
-  rb_define_const(rb_mFtdi, "MPSSE_DO_READ", INT2NUM(MPSSE_DO_READ));
-  rb_define_const(rb_mFtdi, "MPSSE_WRITE_TMS", INT2NUM(MPSSE_WRITE_TMS));
+  rb_define_const(rb_mFtdiC, "MPSSE_WRITE_NEG", INT2NUM(MPSSE_WRITE_NEG));
+  rb_define_const(rb_mFtdiC, "MPSSE_BITMODE", INT2NUM(MPSSE_BITMODE));
+  rb_define_const(rb_mFtdiC, "MPSSE_READ_NEG", INT2NUM(MPSSE_READ_NEG));
+  rb_define_const(rb_mFtdiC, "MPSSE_LSB", INT2NUM(MPSSE_LSB));
+  rb_define_const(rb_mFtdiC, "MPSSE_DO_WRITE", INT2NUM(MPSSE_DO_WRITE));
+  rb_define_const(rb_mFtdiC, "MPSSE_DO_READ", INT2NUM(MPSSE_DO_READ));
+  rb_define_const(rb_mFtdiC, "MPSSE_WRITE_TMS", INT2NUM(MPSSE_WRITE_TMS));
 
-  rb_define_const(rb_mFtdi, "SET_BITS_LOW", INT2NUM(SET_BITS_LOW));
-  rb_define_const(rb_mFtdi, "SET_BITS_HIGH", INT2NUM(SET_BITS_HIGH));
-  rb_define_const(rb_mFtdi, "GET_BITS_LOW", INT2NUM(GET_BITS_LOW));
-  rb_define_const(rb_mFtdi, "GET_BITS_HIGH", INT2NUM(GET_BITS_HIGH));
-  rb_define_const(rb_mFtdi, "LOOPBACK_START", INT2NUM(LOOPBACK_START));
-  rb_define_const(rb_mFtdi, "TCK_DIVISOR", INT2NUM(TCK_DIVISOR));
+  rb_define_const(rb_mFtdiC, "SET_BITS_LOW", INT2NUM(SET_BITS_LOW));
+  rb_define_const(rb_mFtdiC, "SET_BITS_HIGH", INT2NUM(SET_BITS_HIGH));
+  rb_define_const(rb_mFtdiC, "GET_BITS_LOW", INT2NUM(GET_BITS_LOW));
+  rb_define_const(rb_mFtdiC, "GET_BITS_HIGH", INT2NUM(GET_BITS_HIGH));
+  rb_define_const(rb_mFtdiC, "LOOPBACK_START", INT2NUM(LOOPBACK_START));
+  rb_define_const(rb_mFtdiC, "TCK_DIVISOR", INT2NUM(TCK_DIVISOR));
 }
 
