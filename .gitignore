@@ -2,5 +2,5 @@
 *.o
 .*.swp
 *.so
-ext/ftdi/Makefile
-ext/ftdi/mkmf.log
+ext/ftdic/Makefile
+ext/ftdic/mkmf.log
