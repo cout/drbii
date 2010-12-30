@@ -1,4 +1,5 @@
 MemoryLocationBase = Struct.new(
+    :address,
     :name,
     :type,
     :units,
@@ -13,5 +14,17 @@ MemoryLocationBase = Struct.new(
     :gauge)
 
 class MemoryLocation < MemoryLocationBase
+  def read(drbii)
+    if self.type == 'Byte' then
+      x = drbii.send_16bit_memory_location(0, self.address)
+      return x
+    elsif self.type == 'Word' then
+      x1 = drbii.send_16bit_memory_location(0, self.address)
+      x2 = drbii.send_16bit_memory_location(0, self.address+1)
+      return (x1 << 8 | x2)
+    else
+      raise "Unknown type #{self.type}"
+    end
+  end
 end
 

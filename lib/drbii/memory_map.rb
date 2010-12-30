@@ -21,7 +21,7 @@ class MemoryMap
           full_name = $1
           address = $2.to_i
           fields = $3.split(';')
-          location = MemoryLocation.new(*fields)
+          location = MemoryLocation.new(address, *fields)
           locations[location.name] = location
         end
       end
