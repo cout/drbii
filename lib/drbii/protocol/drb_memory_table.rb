@@ -15,7 +15,7 @@ module DrbMemoryTable
   ValueFromAdaptiveMemory    = 0x0E
   BaroPressure               = 0x0F
   EngineRpm_HB               = 0x10
-  EngineRpm_HB               = 0x11
+  EngineRpm_HB_2             = 0x11 # TODO: I think this is a bug in the Turboator source (should be LB)
   Zero_12                    = 0x12
   ErrorCodeUpdateKeyOnCount  = 0x13
   Zero_14                    = 0x14

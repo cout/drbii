@@ -1,5 +1,5 @@
 require 'drbii/protocol/realtime_data_sub_functions'
-require 'drbii/protocol/drb_memory_tabled'
+require 'drbii/protocol/drb_memory_table'
 
 module DrbDiagnosticsDataSubFunctions
   include DrbMemoryTable            # 0x01 - 0x1A

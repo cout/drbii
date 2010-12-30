@@ -1,5 +1,6 @@
+require 'drbii/memory_location'
+
 require 'yaml'
-require 'smec/memory_location'
 
 class MemoryMap
   def initialize(locations)
