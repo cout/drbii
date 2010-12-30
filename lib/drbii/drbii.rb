@@ -23,23 +23,11 @@ class DRBII
   end
 
   def setup_hispeed_data_transfer
-    loop do
-      @io.write DrbFunctions::SetupHiSpeedDataTransfer
-    end
-
-    loop do
-      @logger.info "Reading handshake byte"
-      s = @io.read_timeout(1, 1)
-
-      if s then
-        b = s.unpack('C') 
-        @logger.info("Got 0x#{'%x' % b}")
-        break if b == HANDSHAKE
-      else
-        # TODO: distinguish between timeout and null
-        @logger.info("No response")
-        sleep 1
-      end
+    cmd = DrbFunctions::SetupHiSpeedDataTransfer
+    @io.write(cmd)
+    result = @io.read_timeout(1, 1)
+    if result != cmd then
+      raise RuntimeError, "Expected #{cmd} but got #{result}"
     end
 
     @logger.info "Switching to speed #{BAUD_HIGHSPEED}"
