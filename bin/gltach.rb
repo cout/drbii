@@ -2,6 +2,10 @@ require 'opengl'
 require 'mathn'
 include Gl,Glu,Glut
 
+require 'drbii/drbii'
+require 'drbii/io/ftdi_io'
+require 'drbii/memory_map'
+
 class GlutApplication
   def initialize
     glutInit()
@@ -11,6 +15,7 @@ class GlutApplication
     glutDisplayFunc(self.method(:display).to_proc) 
     glutReshapeFunc(self.method(:reshape).to_proc)
     glutKeyboardFunc(self.method(:keyboard).to_proc)
+    glutIdleFunc(self.method(:idle).to_proc)
   end
 
   def run
@@ -27,6 +32,9 @@ class GlutApplication
   end
 
   def keyboard(key, x, y)
+  end
+
+  def idle
   end
 
   def with_matrix
@@ -52,6 +60,31 @@ class Tachometer < GlutApplication
   def initialize
     super()
 
+    @rpms = 0
+
+    setup_graphics()
+    start_reader_thread()
+  end
+
+  def start_reader_thread
+    source_filename = ARGV[0]
+    mmap = MemoryMap.new(source_filename)
+
+    ftdi_dev = ARGV[1]
+    ftdi = FtdiIO.new(ftdi_dev, true)
+
+    drbii = DRBII.new(ftdi)
+    drbii.handshake()
+
+    rpm_loc = mmap['RPM']
+
+    Thread.new do
+      Thread.current.abort_on_exception = true
+      @rpms = rpm_loc.read(drbii)
+    end
+  end
+
+  def setup_graphics
     glEnable(GL_LIGHTING)
     glEnable(GL_LIGHT0)
     glEnable(GL_DEPTH_TEST)
