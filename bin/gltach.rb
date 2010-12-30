@@ -70,10 +70,35 @@ class Tachometer < GlutApplication
   def initialize
     super()
 
-    @rpms = 6500
-
+    @rpms = 0
     setup_graphics()
+    start_dummy_thread
     # start_reader_thread()
+  end
+
+  def start_dummy_thread()
+    Thread.new do
+      Thread.current.abort_on_exception = true
+      loop do
+        sleep 1
+        s = Time.now
+        base = @rpms
+        while @rpms < 6500 do
+          t = Time.now
+          @rpms = [ 6500, (t - s) * 2 * 6500 ].min
+          @rpms = [ base, @rpms ].max
+          glutPostRedisplay()
+          Thread.pass
+        end
+        s = Time.now
+        while @rpms > 800 do
+          t = Time.now
+          @rpms = [ 800, 6500 - (t - s) * 5000 ].max
+          glutPostRedisplay()
+          Thread.pass
+        end
+      end
+    end
   end
 
   def start_reader_thread
@@ -209,11 +234,9 @@ class Tachometer < GlutApplication
     glViewport(0, 0,  w,  h)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    if (w <= h)
-      glOrtho(-s, s, -s*h/w, s*h/w, -10.0, 10.0)
-    else
-      glOrtho(-s*w/h, s*w/h, -s, s, -10.0, 10.0)
-    end
+    r1 = w > h ? w.to_f/h : 1.0
+    r2 = w > h ? 1.0 : (h.to_f/w)
+    glOrtho(-s*r1, s*r1, -s*r2, s*r2, -10.0, 10.0)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
   end
