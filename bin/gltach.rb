@@ -55,13 +55,14 @@ class GlutApplication
     end
   end
 
-  def compile_list(list)
+  def compile_list(list = glGenLists(1))
     glNewList(list, GL_COMPILE)
     begin
       yield
     ensure
       glEndList()
     end
+    return list
   end
 end
 
@@ -109,10 +110,32 @@ class Tachometer < GlutApplication
     # glEnable(GL_LIGHT0)
     #glEnable(GL_DEPTH_TEST)
     
-    @lists = glGenLists(1)
+    @tach = compile_tach()
+    @needle = compile_needle()
+  end
+
+  def compile_needle
+    return compile_list do
+      glColor(0.2, 0.2, 0.6)
+      gl_do(GL_POLYGON) do
+        glVertex(-0.01, 0)
+        glVertex(0.01, 0)
+        glVertex(0, 0.7)
+      end
+
+      # Draw a highlight - TODO: use lighting effects for this
+      glColor(0.6, 0.6, 1.0)
+      gl_do(GL_LINES) do
+        glVertex(0, 0)
+        glVertex(0, 0.7)
+      end
+    end
+  end
+
+  def compile_tach
     qobj = gluNewQuadric()
     
-    compile_list(@lists) do
+    return compile_list do
       glColor(0.5, 0.0, 0.0)
       gluQuadricDrawStyle(qobj, GLU_FILL)
       gluQuadricNormals(qobj, GLU_NONE)
@@ -159,15 +182,14 @@ class Tachometer < GlutApplication
   end
 
   def draw_tach
-    glCallList(@lists)
+    glCallList(@tach)
   end
 
   def draw_needle
-    glColor(0.6, 0.6, 1.0)
-    radians = rpms_to_radians(@rpms)
-    gl_do(GL_LINES) do
-      glVertex(0, 0)
-      glVertex(0.7 * Math.cos(radians), 0.7 * Math.sin(radians))
+    degrees = rpms_to_degrees(@rpms)
+    with_matrix do
+      glRotate(degrees - 90, 0, 0, 1)
+      glCallList(@needle)
     end
   end
 
