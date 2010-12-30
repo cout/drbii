@@ -54,16 +54,25 @@ class GlutApplication
       glEnd()
     end
   end
+
+  def compile_list(list)
+    glNewList(list, GL_COMPILE)
+    begin
+      yield
+    ensure
+      glEndList()
+    end
+  end
 end
 
 class Tachometer < GlutApplication
   def initialize
     super()
 
-    @rpms = 0
+    @rpms = 6500
 
     setup_graphics()
-    start_reader_thread()
+    # start_reader_thread()
   end
 
   def start_reader_thread
@@ -85,30 +94,41 @@ class Tachometer < GlutApplication
   end
 
   def setup_graphics
-    glEnable(GL_LIGHTING)
-    glEnable(GL_LIGHT0)
-    glEnable(GL_DEPTH_TEST)
+    # glEnable(GL_LIGHTING)
+    glDisable(GL_LIGHTING)
+    # glEnable(GL_LIGHT0)
+    #glEnable(GL_DEPTH_TEST)
     
     @lists = glGenLists(1)
     qobj = gluNewQuadric()
     
-    gluQuadricDrawStyle(qobj, GLU_LINE)
-    gluQuadricNormals(qobj, GLU_NONE)
+    compile_list(@lists) do
+      glColor(0.5, 0.0, 0.0)
+      gluQuadricDrawStyle(qobj, GLU_FILL)
+      gluQuadricNormals(qobj, GLU_NONE)
+      gluPartialDisk(qobj, 0.9, 1.0, 2, 1, 90-18, 18)
 
-    glNewList(@lists, GL_COMPILE)
-    gluDisk(qobj, 0.9, 1.0, 20, 1)
+      glColor(1.0, 0.0, 0.0)
+      gluQuadricDrawStyle(qobj, GLU_FILL)
+      gluQuadricNormals(qobj, GLU_NONE)
+      gluPartialDisk(qobj, 0.9, 1.0, 4, 1, 90, 72)
 
-    (0..8).each do |krpms|
-      label = "#{krpms}"
-      radians = rpms_to_radians(krpms * 1000)
-      with_matrix do
-        glTranslate(1.2 * Math.cos(radians), 1.2 * Math.sin(radians), 0)
-        glScale(0.001, 0.001, 1)
-        label.each_byte { |x| glutStrokeCharacter(GLUT_STROKE_ROMAN, x) }
+      glColor(1.0, 1.0, 1.0)
+      gluQuadricDrawStyle(qobj, GLU_LINE)
+      gluQuadricNormals(qobj, GLU_NONE)
+      gluDisk(qobj, 0.9, 1.0, 20, 1)
+
+      glColor(0.2, 1.0, 0.8)
+      (0..8).each do |krpms|
+        label = "#{krpms}"
+        radians = rpms_to_radians(krpms * 1000)
+        with_matrix do
+          glTranslate(1.2 * Math.cos(radians), 1.2 * Math.sin(radians), 0)
+          glScale(0.001, 0.001, 1)
+          label.each_byte { |x| glutStrokeCharacter(GLUT_STROKE_ROMAN, x) }
+        end
       end
     end
-
-    glEndList()
   end
 
   def degrees_to_radians(degrees)
@@ -135,8 +155,8 @@ class Tachometer < GlutApplication
       glTranslate(-1.0, -1.0, 0.0)
       glCallList(@lists)
 
-      rpms = 6500
-      radians = rpms_to_radians(rpms)
+      glColor(0.6, 0.6, 1.0)
+      radians = rpms_to_radians(@rpms)
       gl_do(GL_LINES) do
         glVertex(0, 0)
         glVertex(0.7 * Math.cos(radians), 0.7 * Math.sin(radians))
@@ -147,13 +167,14 @@ class Tachometer < GlutApplication
   end
 
   def reshape(w, h)
+    s = 2.5
     glViewport(0, 0,  w,  h)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     if (w <= h)
-      glOrtho(-2.5, 2.5, -2.5*h/w, 2.5*h/w, -10.0, 10.0)
+      glOrtho(-s, s, -s*h/w, s*h/w, -10.0, 10.0)
     else
-      glOrtho(-2.5*w/h, 2.5*w/h, -2.5, 2.5, -10.0, 10.0)
+      glOrtho(-s*w/h, s*w/h, -s, s, -10.0, 10.0)
     end
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
