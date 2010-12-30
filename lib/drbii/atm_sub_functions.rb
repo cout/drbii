@@ -1,21 +1,4 @@
 # TODO: Generate from asm source
-class DrbFunctions
-  OutputErrorCodes           = 0x10
-  OutputErrorBits            = 0x11
-  SetupHiSpeedDataTransfer   = 0x12
-  SetupATM                   = 0x13
-  SendDiagnosticDataToSCI    = 0x14
-  DRB_Return_15              = 0x15
-  SendECUIDToSCI             = 0x16
-  ClearErrorCodes            = 0x17
-  DRB_Return_18              = 0x18
-  DRB_Return_19              = 0x19
-  SwitchTest                 = 0x1A
-  InitByteModeDownload       = 0x1B
-  DRB_Return_1C              = 0x1C
-end
-
-# TODO: Generate from asm source
 class AtmSubFunctions
   ATM_Return_00              = 0x00
   IgnitionCoil               = 0x01
@@ -43,17 +26,5 @@ class AtmSubFunctions
   ATM_Return_17              = 0x17
   ATM_Return_18              = 0x18
   ATM_Return_19              = 0x19
-end
-
-class SwitchTestSubFunctions
-  SendSwitchStateToSerial    = 0x01
-  SendOutputStatusToSerial   = 0x02
-  SendOutputStatusToSerial2  = 0x03
-end
-
-class RealtimeDataSubFunctions
-  SCI_MAPVolts               = 0x40
-  SCI_Speed                  = 0x41
-  SCI_O2Volts                = 0x42
 end
 
