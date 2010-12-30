@@ -102,6 +102,8 @@ class Tachometer < GlutApplication
   end
 
   def setup_graphics
+    enable_antialiasing()
+
     # glEnable(GL_LIGHTING)
     glDisable(GL_LIGHTING)
     # glEnable(GL_LIGHT0)
@@ -156,19 +158,25 @@ class Tachometer < GlutApplication
     return radians
   end
 
+  def draw_tach
+    glCallList(@lists)
+  end
+
+  def draw_needle
+    glColor(0.6, 0.6, 1.0)
+    radians = rpms_to_radians(@rpms)
+    gl_do(GL_LINES) do
+      glVertex(0, 0)
+      glVertex(0.7 * Math.cos(radians), 0.7 * Math.sin(radians))
+    end
+  end
+
   def display
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     
     with_matrix do
-      # glTranslate(-1.0, -1.0, 0.0)
-      glCallList(@lists)
-
-      glColor(0.6, 0.6, 1.0)
-      radians = rpms_to_radians(@rpms)
-      gl_do(GL_LINES) do
-        glVertex(0, 0)
-        glVertex(0.7 * Math.cos(radians), 0.7 * Math.sin(radians))
-      end
+      draw_tach()
+      draw_needle()
     end
 
     glutSwapBuffers()
