@@ -52,9 +52,38 @@ class Tachometer < GlutApplication
     
     gluQuadricDrawStyle(qobj, GLU_LINE)
     gluQuadricNormals(qobj, GLU_NONE)
+
     glNewList(@lists, GL_COMPILE)
     gluDisk(qobj, 0.9, 1.0, 20, 1)
+
+    (0..8).each do |krpms|
+      label = "#{krpms}"
+      radians = rpms_to_radians(krpms * 1000)
+      with_matrix do
+        glTranslate(1.2 * Math.cos(radians), 1.2 * Math.sin(radians), 0)
+        glScale(0.001, 0.001, 1)
+        label.each_byte { |x| glutStrokeCharacter(GLUT_STROKE_ROMAN, x) }
+      end
+    end
+
     glEndList()
+  end
+
+  def degrees_to_radians(degrees)
+    radians = 2 * Math::PI * (degrees / 360.0)
+    return radians
+  end
+
+  def rpms_to_degrees(rpms)
+    zero = 216.0
+    step = 36.0
+    return zero - (rpms / 1000.0) * step
+  end
+
+  def rpms_to_radians(rpms)
+    degrees = rpms_to_degrees(rpms)
+    radians = degrees_to_radians(degrees)
+    return radians
   end
 
   def display
