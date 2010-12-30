@@ -1,0 +1,331 @@
+# DRB Protocol (as best as I can decode it from the source):
+#   Output error codes            [ 0x10 ]                     -> code1, code2, ..., 0xfe
+#   Output error bits             [ 0x11 ]                     -> HB, LB
+#   Setup hi speed data transfer  [ 0x12 ]                     -> nothing
+#   Setup ATM                     [ 0x13 ] [ arg ]             -> depends on function?
+#   Send diagnostic data to SCI   [ 0x14 ] [ loc ]             -> 1 byte
+#   Send 16-bit memory location   [ 0x15 ] [ arg1 ] [ arg2 ]   -> 1 byte
+#   Send ECU ID to SCI            [ 0x16 ] [ arg1 ]            -> ?
+#   Clear error codes             [ 0x17 ]                     -> 0xe0, 0xe0, 0xe0
+#   Control ASD relay             [ 0x18 ] [ arg1 ]            -> nothing?
+#   Set min idle speed            [ 0x19 ] [ arg1 ]            -> nothing?
+#   Switch test                   [ 0x1A ] [ arg1 ]            -> ?
+#   Init byte mode download       [ 0x1B ]                     -> nothing
+#   Reset EMR                     [ 0x1C ] [ arg1 ] [ arg2 ]   -> 0xe2 or 0x00
+#
+# Output error codes (0 args):
+#   sends error codes one by one
+#   uses DRBPointer2 to keep an index to which code is currently being sent
+#   sends 0xfe when there are no more codes
+#
+# Output error bits (0 args):
+#   sends high byte (if DRBPointer2 == 0) then low byte (if DRBPointer2 == 1)
+#
+# Setup hi speed data transfer (0 args):
+#   sets bbe_FastSerial bit in DRBSerialMode
+#   while (CPU_SerialStatus & $%01000000) == 0:
+#     busy loop
+#   set baud rate to BAUDHI_DRBBaudRateHi
+#   does not send back anything (except the command itself which is echoed
+#   before the command is executed)
+#
+# Setup ATM (1 arg):
+#   if TimerOverflowsBetweenDistPulses <= 0x28 or arg < 0x19:
+#     unset b55_O2Enable in BitFlags_55
+#     send back 0x00
+#   else:
+#     execute ATM function given by arg
+#
+# Send diagnostic data to SCI (1 arg):
+#   function differentiates between realtime data and data in memory
+#   the realtime data table is an indexed jump to a function that calculates a
+#   value and sends it back
+#   the in memory routine just sends the byte at the requested memory location
+#   note that the location to request is NOT the address in memory; it is the
+#   index in DRBMemoryTable
+#
+# Send ECU ID to SCI (2 args):
+#   Not sure why this takes 2 args or what they mean.  Here's the pseudocode:
+#
+#   b = ENDIT1_PNPrefix[DRBPointer2]
+#   if hi bit set in b:
+#     DRBPointer2 = b / 4
+#   a = ENDIT1_PNPrefix[DRBPointer2]
+#   DRBPointer2 += 1
+#   if DRBPointer2 % 4 != 0:
+#     send a
+#     return
+#   else:
+#     send a
+#     do some math to calculate new a
+#     DRBPointer1 = 0
+#     send a
+#
+# Clear error codes (0 args):
+#   clears the error codes
+#   sends 0xe0
+#   sends 0xe0 (again)
+#   sends 0xe0 (a third time)
+#
+# Control ASD relay:
+#   This command is not processed as part of the normal processing of commands
+#   but is instead processed synchronously with the rest of the ASD code.
+#
+#   I'm too tired to figure out what the code does but it's in the
+#   ControlAsdRelay_MM routine.
+#
+# Set min idle speed (1 arg):
+#   This command is not processed as part of the normal processing of commands
+#   but is instead processed synchronously with the rest of the idle code.
+#
+#   I'm too tired to figure out what the code does but it's in the
+#   CalculateTargetIdleSpeedAndAisPosition_MM routine.
+#
+# Switch test (1 arg):
+#   arg is 1, 2, or 3
+#   now this is confusing, because the logic says this:
+#     if arg < 0: return
+#     if arg > 3: return
+#     goto [SwitchTestTable+arg-2]
+#   so if arg is 2 then SendSwitchStateToSerial is called
+#   if arg is 3 then SendOutputStatusToSerial is called
+#   if arg is 1 then the array underflows?
+#   (this looks like an off by 1 error)
+#
+# Init byte mode download (0 args):
+#   sets the bbe_ByteMode bit in DRBSerialMode
+#   does not send anything back
+#
+# Reset EMR (2 args):
+#
+#   I'm not quite sure what to make of this:
+#
+#   if arg2 >= 28:
+#     disable interrupts
+#     if neither b52_DRBToggle1 nor b52_DRBToggle2 is set in BitFlags_52:
+#       set b52_DRBToggle1 in BitFlags52
+#       enable interrupts
+#       DRBOffsetStored_LB = a
+#       b = DRBPointer2
+#       DRBOffsetStored_HB = b
+#       send 0xe2
+#       return
+#     else:
+#       enable interrupts
+#   send 0x00
+#   return
+
+# not sure what functions below 0x10 will do?
+DRBFunctionTable = [
+  OutputErrorCodes,            ; test command 0x10
+  OutputErrorBits,             ; test command 0x11
+  SetupHiSpeedDataTransfer,    ; test command 0x12
+  SetupATM,                    ; test command 0x13
+  SendDiagnosticDataToSCI,     ; test command 0x14
+  DRB_Return,                  ; test command 0x15 (?)
+  SendECUIDToSCI,              ; test command 0x16
+  ClearErrorCodes,             ; test command 0x17
+  DRB_Return,                  ; test command 0x18 (?)
+  DRB_Return,                  ; test command 0x19 (set min idle speed test)
+  SwitchTest,                  ; test command 0x1A
+  InitByteModeDownload,        ; test command 0x1B
+  DRB_Return,                  ; test command 0x1C (reset EMR)
+]
+
+# 0x00 means no args
+# 0x20 is bbe_TestType3
+# 0x10 is bbe_TestType2
+# 0x30 is bbe_TestType2 | bbe_TestType3
+# bbe_TestType2 means that the command invokes DRB_SendMemLocToSCI; this will
+# be true then for 0x15 (?) and 0x1C (reset EMR), except that reset EMR has a
+# special exception in DRB_SendMemLocToSCI so that it doesn't send back a
+# memory location
+DRBSerialToggles = [
+  0x20, ; 2 bytes              ; test command 0x13
+  0x20, ; 2 bytes              ; test command 0x14
+  0x30, ; 3 bytes              ; test command 0x15
+  0x20, ; 2 bytes              ; test command 0x16
+  0x00, ; 1 byte               ; test command 0x17
+  0x20, ; 2 bytes              ; test command 0x18
+  0x20, ; 2 bytes              ; test command 0x19
+  0x20, ; 2 bytes              ; test command 0x1A
+  0x00, ; 1 byte               ; test command 0x1B
+  0x30, ; 3 bytes              ; test command 0x1C
+]
+
+Main loop:
+  ... stuff happens ...
+
+  # First read any data on the line
+  call DRBIISerialCommunications_MM
+
+  # Then process the data, if we've finished reading all the command arguments
+  call DRBIIOuput_MM
+
+  ... more stuff happens ...
+
+DRBIIOuput_MM:
+  if (DRBSerialMode & (bbe_TestType3 | bbe_TestType2)) != 0:
+    b = DRBPointer1 - 0x10
+    if b < 0 or b > 0x0c:
+      return
+    else:
+      goto [DRBFunctionTable + b]
+
+# CPU_SerialBaudRate & $%10000000 = test bit
+# CPU_SerialBaudRate & $%01000000 = 0
+# CPU_SerialBaudRate & $%00110111 = baud rate
+# CPU_SerialBaudRate & $%00001000 = another test bit
+#
+# CPU_SerialStatus   & $%10000000 = indicates we have data to write?
+# CPU_SerialStatus   & $%01000000 = checked when entering hi speed mode?
+# CPU_SerialStatus   & $%00100000 = something w/ XmitRequestedRamLocation
+# CPU_SerialStatus   & $%00001110 = was data read ok?
+# CPU_SerialStatus   & $%00000001 = unused?
+
+DRBIISerialCommunications_MM:
+  if high speed logger enabled:
+    # don't read any serial data here, because the interrupt handler will take
+    # care of it
+    return
+
+  if (DRBSerialMode & (bbe_FastSerial | bbe_ByteMode)) != 0:
+    # also return if fastserial or bytemode is set
+    return
+
+  elif (CPU_SerialBaudRate & $%00110111) == BAUDLO_DRBBaudRateLo:
+    # L1254
+    if (CPU_SerialStatus & $%00001110) == 0:
+      goto DRB_NoRxError
+    else:
+      # read a byte and throw it away?
+      a = CPU_SerialData
+      return
+  else:
+    a = BAUDLO_DRBBaudRateLo
+    CPU_SerialBaudRate = a
+    return
+
+DRB_NoRxError:
+  if (CPU_SerialStatus & $%00100000) != 0:
+    goto DRB_ChrRxd
+
+  elif all bits of bbe_bottom are set in DRBSerialMode:
+    # we tried to read the next byte in the command 15 times; now we give up
+    goto DRB_Timeout
+
+  else:
+    DRBSerialMode += 1
+    return
+
+DRB_Timeout:
+  if bbe_TestType3 or bbe_TestType2 is set in DRBSerialMode:
+    DRBSerialMode &= ~bbe_TestType3
+    DRBSerialMode &= ~bbe_TestType2
+    DRBPointer1 = 0
+  return
+
+# possible flags for DRBSerialMode
+bbe_FastSerial  = $%10000000
+bbe_ByteMode    = $%01000000
+bbe_TestType3   = $%00100000
+bbe_TestType2   = $%00010000
+bbe_top         = $%11110000
+
+DRB_ChrRxd:
+  a = CPUSerialData       # read next byte?
+  CPUSerialData = a       # echo it back?
+
+  # set counter bits to 0 but keep state bits
+  DRBSerialMode &= bbe_top
+
+  if DRBSerialMode & (bbe_TestType3 | bbe_TestType2) != 0:
+    # we've already read the command byte
+    goto DRB_StorePointer
+
+  else:
+    # this is the first byte of the command to be read
+    DRBPointer1 = a
+    DRBPointer2 = 0
+
+    if a > 0x1c or a < 0x13:
+      return
+
+    elif a == 0x13 and TimerOverflowsBetweenDistPulses <= 0x28: (?)
+      KeyOnOrEngineRunningTime = 0x02
+
+    # DRB_SetModeVar:
+    DRBSerialMode |= DRBSerialToggles[DRBPointer1 - 0x13]
+
+  return
+
+DRB_StorePointer:
+  # we know from the fact that we got here that *either* testtype3 or
+  # testtype2 is set
+  if (DRBSerialMode & bbe_TestType3) == 0:
+    # if testtype3 was NOT set (i.e. testtype2 was set)
+    goto DRB_SendMemLocToSCI
+
+  else:
+    # if testtype3 WAS set, then set DRBPointer2 and turn off the testtype3
+    # flag
+    DRBPointer2 = a # i.e. the byte that was just read
+    DRBSerialMode &= ~bbe_TestType3
+
+  return
+
+# It looks like this routine differs from SendMemoryLocToSCI in that it allows
+# 16-bit addressing instead of just 8-bit addressing (RAM).  Thus the entire
+# ROM could be read using this routine?
+DRB_SendMemLocToSCI:
+  # we know from the fact that we got here that testtype2 must have been set;
+  # turn it off
+  DRBSerialMode &= ~bbe_TestType2
+
+  if DRBPointer1 == 0x1c:
+    # why we invoke this routine *here* (in the middle of the reading routine)
+    # I am not sure...
+    goto DRB_ResetEMR
+
+  else:
+    b = a
+    a = DRBPointer2
+    xgDX # why?
+    a = MEM[x]
+    goto SerialOutput1a
+
+SendDiagnosticDataToSCI:
+  if DRBPointer2 > 0x40:
+    # SendRealTImeDatatoSCI:
+    b = DRBPointer2 - 0x40
+    if b > 0x03:
+      DRBPointer1 = 0
+      return
+    else:
+      lslb?
+      goto [RealTimeDataTable + b]
+
+  elif DRBPointer2 > 0x1a:
+    DRBPointer1 = 0
+    return
+
+  elif (DRBPointer2 != 0x10) or (bits b4f_OffIdle are clear in BitFlags_4f):
+    # SendMemoryLocToSCI:
+    b = DRBMemoryTable[[b - 1]
+    if b == 0:
+      goto L1266
+    else:
+      a = 0
+      xgDX # why?
+      a = MEM[x]
+      goto SerialOutput1a
+
+SerialOutput1:
+  a = 0
+SerialOutput1a:
+  b = CPU_SerialStatus
+  while high bit is set in CPU_SerialStatus:
+    busy loop
+  CPU_SerialData = a
+  return
+
