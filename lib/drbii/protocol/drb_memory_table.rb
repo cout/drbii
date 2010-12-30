@@ -1,4 +1,4 @@
-module DRBMemoryTable
+module DrbMemoryTable
   AmbientAirTempVolts        = 0x01
   O2SensorVolts              = 0x02
   Zero_03                    = 0x03
