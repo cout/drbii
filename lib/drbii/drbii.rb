@@ -79,8 +79,3 @@ class DRBII
   end
 end
 
-if __FILE__ == $0 then
-  smec = SMEC.new
-  smec.handshake
-end
-
