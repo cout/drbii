@@ -5,7 +5,7 @@ include Gl,Glu,Glut
 class GlutApplication
   def initialize
     glutInit()
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH)
     glutCreateWindow($0)
     glutFullScreen()
     glutDisplayFunc(self.method(:display).to_proc) 
@@ -53,7 +53,7 @@ class Tachometer < GlutApplication
     gluQuadricDrawStyle(qobj, GLU_LINE)
     gluQuadricNormals(qobj, GLU_NONE)
     glNewList(@lists, GL_COMPILE)
-    gluDisk(qobj, 0.25, 1.0, 20, 4)
+    gluDisk(qobj, 0.9, 1.0, 20, 1)
     glEndList()
   end
 
