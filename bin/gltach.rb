@@ -37,6 +37,15 @@ class GlutApplication
       glPopMatrix()
     end
   end
+
+  def gl_do(x)
+    glBegin(x)
+    begin
+      yield
+    ensure
+      glEnd()
+    end
+  end
 end
 
 class Tachometer < GlutApplication
@@ -92,6 +101,13 @@ class Tachometer < GlutApplication
     with_matrix do
       glTranslate(-1.0, -1.0, 0.0)
       glCallList(@lists)
+
+      rpms = 6500
+      radians = rpms_to_radians(rpms)
+      gl_do(GL_LINES) do
+        glVertex(0, 0)
+        glVertex(0.7 * Math.cos(radians), 0.7 * Math.sin(radians))
+      end
     end
 
     glutSwapBuffers()
