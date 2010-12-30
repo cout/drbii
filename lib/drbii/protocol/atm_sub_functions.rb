@@ -1,5 +1,5 @@
 # TODO: Generate from asm source
-class AtmSubFunctions
+module AtmSubFunctions
   ATM_Return_00              = 0x00
   IgnitionCoil               = 0x01
   ATM_Return_02              = 0x02
