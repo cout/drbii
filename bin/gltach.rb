@@ -93,6 +93,14 @@ class Tachometer < GlutApplication
     end
   end
 
+  def enable_antialiasing
+    glEnable(GL_LINE_SMOOTH)
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
+    glLineWidth(1.5)
+  end
+
   def setup_graphics
     # glEnable(GL_LIGHTING)
     glDisable(GL_LIGHTING)
@@ -106,7 +114,7 @@ class Tachometer < GlutApplication
       glColor(0.5, 0.0, 0.0)
       gluQuadricDrawStyle(qobj, GLU_FILL)
       gluQuadricNormals(qobj, GLU_NONE)
-      gluPartialDisk(qobj, 0.9, 1.0, 2, 1, 90-18, 18)
+      gluPartialDisk(qobj, 0.9, 1.0, 2, 1, 90-18, 36) # overdraw this one, since gluPartialDisk won't draw less than 2 pieces
 
       glColor(1.0, 0.0, 0.0)
       gluQuadricDrawStyle(qobj, GLU_FILL)
@@ -152,7 +160,7 @@ class Tachometer < GlutApplication
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     
     with_matrix do
-      glTranslate(-1.0, -1.0, 0.0)
+      # glTranslate(-1.0, -1.0, 0.0)
       glCallList(@lists)
 
       glColor(0.6, 0.6, 1.0)
@@ -167,7 +175,7 @@ class Tachometer < GlutApplication
   end
 
   def reshape(w, h)
-    s = 2.5
+    s = 1.5
     glViewport(0, 0,  w,  h)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
