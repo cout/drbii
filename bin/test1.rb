@@ -1,6 +1,6 @@
 require 'drbii/smec'
 require 'drbii/memory_map'
-require 'drbii/ftdi_io'
+require 'drbii/io/ftdi_io'
 
 if __FILE__ == $0 then
   source_filename = ARGV[0]
