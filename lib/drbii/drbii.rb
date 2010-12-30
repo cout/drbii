@@ -1,4 +1,7 @@
-require 'smec/smec_drb'
+require 'drbii/protocol/drb_functions'
+require 'drbii/protocol/atm_sub_functions'
+require 'drbii/protocol/switch_test_sub_functions'
+require 'drbii/protocol/realtime_data_sub_functions'
 
 require 'logger'
 
