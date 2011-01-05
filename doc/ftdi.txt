@@ -1,0 +1,13 @@
+On the FTDI cable:
+  black   GND
+  orange  TX
+  yellow  RX
+
+on the SCI connector:
+  green   RX
+  pink    TX
+
+So connect orange to green and yellow to pink.
+
+You can also connect black (ground).
+
