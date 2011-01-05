@@ -1,10 +1,12 @@
 require 'timeout'
 require 'ftdic'
+require 'logger'
 
 class FtdiIO
   def initialize(dev, bitbang=true)
     @ftdi = FtdiC::Context.new
     @ftdi.open(dev)
+    @logger = Logger.new(STDOUT)
 
     if bitbang then
       @ftdi.set_bitmode(0xFF, FtdiC::BITMODE_BITBANG)
@@ -12,11 +14,15 @@ class FtdiIO
   end
 
   def baudrate=(baud)
+    @logger.info "Setting baud rate to #{baud}"
     @ftdi.baudrate = baud
   end
 
   def read(n)
-    return @ftdi.read_data(n)
+    @logger.info "Reading"
+    s = @ftdi.read_data(n)
+    @logger.info "Read #{s.inspect}"
+    return s
   end
 
   def read_timeout(t, n)
@@ -24,6 +30,7 @@ class FtdiIO
   end
 
   def write(s)
+    @logger.info "Writing #{s.inspect}"
     return @ftdi.write_data(s)
   end
 
@@ -35,6 +42,7 @@ class FtdiIO
     begin
       return timeout(t, &block)
     rescue TimeoutError
+      @logger.info "Timeout after #{t} seconds"
     end
   end
 end
