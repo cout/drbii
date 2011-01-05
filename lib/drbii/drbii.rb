@@ -24,11 +24,11 @@ class DRBII
 
   def do_cmd(cmd, *args)
     # All commands are echo'd back
-    s = ([cmd] + args).pack('C')
+    s = ([cmd.cmd] + args).pack('C')
     @io.write(s)
     result = @io.read_timeout(1, 1)
-    if result != cmd then
-      raise RuntimeError, "Expected #{cmd} but got #{result}"
+    if result != cmd.cmd then
+      raise RuntimeError, "Expected #{cmd.cmd} but got #{result.inspect}"
     end
   end
 
