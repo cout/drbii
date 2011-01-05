@@ -10,12 +10,12 @@ class SerialIO
     @sp.set_modem_params(:baud => baud)
   end
 
-  def read(n=nil)
+  def read(n)
     s = @sp.read(n)
     return invert(s)
   end
 
-  def read_timeout(t, n=nil)
+  def read_timeout(n, t)
     return io_timeout(t) { read(n) }
   end
 
@@ -24,7 +24,7 @@ class SerialIO
     return @sp.write(s)
   end
 
-  def write_timeout(t, s)
+  def write_timeout(s, t)
     return io_timeout(t) { write(s) }
   end
 

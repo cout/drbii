@@ -12,6 +12,9 @@ class DRBII
   BAUD_LOWSPEED = 7812
   BAUD_HIGHSPEED = 62500
 
+  # BAUD_LOWSPEED = 9608
+  # BAUD_HIGHSPEED = 62500
+
   def initialize(io, baud=BAUD_LOWSPEED)
     @io = io
     @io.baudrate = baud
@@ -23,12 +26,14 @@ class DRBII
   end
 
   def do_cmd(cmd, *args)
+    @logger.info "Sending command #{cmd.inspect} with args #{args.inspect}"
     # All commands are echo'd back
     s = ([cmd.cmd] + args).pack('C')
     @io.write(s)
-    result = @io.read_timeout(1, 1)
-    if result != cmd.cmd then
-      raise RuntimeError, "Expected #{cmd.cmd} but got #{result.inspect}"
+    result = @io.read(1 + cmd.num_args)
+    p result
+    if result[-1] != s[0] then
+      raise RuntimeError, "Expected #{s[0].chr.inspect} but got #{result.inspect}"
     end
   end
 
@@ -75,7 +80,7 @@ class DRBII
   end
 
   def send_16bit_memory_location(addr1, addr2)
-    do_cmd(DrbFunctions::SendDiagnosticDataToSCI, addr1, addr2)
+    do_cmd(DrbFunctions::Send16BitMemoryLocation, addr1, addr2)
     s = @io.read_timeout(1, 1)
     return s.unpack('C')
   end
@@ -113,7 +118,7 @@ class DRBII
 
   def wait_for_no_more_data()
     @logger.info "Waiting for end of data stream"
-    while @io.read_timeout(1, 1) do
+    while @io.read_timeout(1, 1) != "" do
       # ...
     end
     @logger.info "Reached end of data stream"

@@ -9,7 +9,7 @@ class FtdiIO
     @logger = Logger.new(STDOUT)
 
     if bitbang then
-      @ftdi.set_bitmode(0xFF, FtdiC::BITMODE_BITBANG)
+      @ftdi.set_bitmode(0xFF, FtdiC::BITMODE_SYNCBB)
     end
   end
 
@@ -25,7 +25,7 @@ class FtdiIO
     return s
   end
 
-  def read_timeout(t, n)
+  def read_timeout(n, t)
     return io_timeout(t) { read(n) }
   end
 
@@ -34,7 +34,7 @@ class FtdiIO
     return @ftdi.write_data(s)
   end
 
-  def write_timeout(t, s)
+  def write_timeout(s, t)
     return io_timeout(t) { write(s) }
   end
 
