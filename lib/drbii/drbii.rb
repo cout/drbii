@@ -27,13 +27,17 @@ class DRBII
 
   def do_cmd(cmd, *args)
     @logger.info "Sending command #{cmd.inspect} with args #{args.inspect}"
-    # All commands are echo'd back
-    s = ([cmd.cmd] + args).pack('C')
-    @io.write(s)
-    result = @io.read(1 + cmd.num_args)
-    p result
-    if result[-1] != s[0] then
-      raise RuntimeError, "Expected #{s[0].chr.inspect} but got #{result.inspect}"
+    @io.write(cmd.cmd.chr)
+
+    # All commands are echo'd back by the SMEC
+    result = @io.read(1)
+    if result[-1] != cmd[0] then
+      raise RuntimeError, "Expected #{cmd[0].chr.inspect} but got #{result.inspect}"
+    end
+
+    args.each do |arg|
+      # TODO: how to synchronize these writes?
+      @io.write(arg.chr)
     end
   end
 
