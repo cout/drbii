@@ -27,12 +27,14 @@ class DRBII
 
   def do_cmd(cmd, *args)
     @logger.info "Sending command #{cmd.inspect} with args #{args.inspect}"
-    @io.write(cmd.cmd.chr)
+
+    s = cmd.cmd.chr
+    @io.write(s)
 
     # All commands are echo'd back by the SMEC
     result = @io.read(1)
-    if result[-1] != cmd[0] then
-      raise RuntimeError, "Expected #{cmd[0].chr.inspect} but got #{result.inspect}"
+    if result[-1] != s then
+      raise RuntimeError, "Expected #{s.inspect} but got #{result.inspect}"
     end
 
     args.each do |arg|
