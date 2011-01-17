@@ -26,7 +26,13 @@ class FtdiIO
   end
 
   def read_timeout(n, t)
-    return io_timeout(t) { read(n) }
+    s = ''
+    io_timeout(t) do
+      while s == ''
+        s = read(n - s.length)
+      end
+    end
+    return s
   end
 
   def write(s)

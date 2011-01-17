@@ -40,8 +40,8 @@ class DRBII
     @io.write(s)
 
     # All commands are echo'd back by the SMEC
-    result = @io.read(1)
-    if result[-1] != s then
+    result = @io.read_timeout(1, 1)
+    if result[-1] != s[0] then
       raise RuntimeError, "Expected #{s.inspect} but got #{result.inspect}"
     end
 
@@ -82,6 +82,11 @@ class DRBII
     do_cmd(DrbFunctions::SetupHiSpeedDataTransfer)
     @logger.info "Switching to speed #{BAUD_HIGHSPEED}"
     @io.baudrate = BAUD_HIGHSPEED
+    # s = @io.read_timeout(1, 1)
+    # if s != DrbFunctions::SetupHiSpeedDataTransfer.cmd.chr then
+    # raise "Expected #{DrbFunctions::SetupHiSpeedDataTransfer.cmd.chr.inspect} but got #{s.inspect}"
+    # end
+    @fastserial = true
   end
 
   def setup_atm(subfunc)
@@ -107,10 +112,11 @@ class DRBII
 
     # TODO: correct byte order?
     address_16bit = memory_location.address + offset
-    addr1 = (address_16bit & 0xFF00) >> 0xFF
+    addr1 = (address_16bit & 0xFF00) >> 8
     addr2 = address_16bit & 0xFF
 
     do_cmd(DrbFunctions::Send16BitMemoryLocation, addr1, addr2)
+    s = @io.read_timeout(1, 1)
     s = @io.read_timeout(1, 1)
 
     @logger.info("send_16bit_memory_location -> #{s.inspect}")
@@ -126,7 +132,7 @@ class DRBII
     # TODO: correct byte order?
     addr = memory_location.address + offset
 
-    @io.write(addr)
+    @io.write([addr].pack('C'))
     s = @io.read_timeout(1, 1)
 
     @logger.info("send_memory_location_fastserial -> #{s.inspect}")
