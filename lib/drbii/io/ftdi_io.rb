@@ -20,21 +20,22 @@ class FtdiIO
     @ftdi.baudrate = baud
   end
 
-  def read(n)
+  def read_data(n)
     @logger.info "Reading up to #{n} bytes"
     s = @ftdi.read_data(n)
     @logger.info "<-- #{s.inspect}"
     return s
   end
 
-  def read_timeout(n, t)
+  def read(n)
     s = ''
-    io_timeout(t) do
-      while s == ''
-        s = read(n - s.length)
-      end
+    while s == ''
+      s = read_data(n - s.length)
     end
-    return s
+  end
+
+  def read_timeout(n, t)
+    return io_timeout(t) { read(n) }
   end
 
   def write(s)
