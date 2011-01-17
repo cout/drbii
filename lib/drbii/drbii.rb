@@ -82,10 +82,10 @@ class DRBII
     do_cmd(DrbFunctions::SetupHiSpeedDataTransfer)
     @logger.info "Switching to speed #{BAUD_HIGHSPEED}"
     @io.baudrate = BAUD_HIGHSPEED
-    # s = @io.read_timeout(1, 1)
-    # if s != DrbFunctions::SetupHiSpeedDataTransfer.cmd.chr then
-    # raise "Expected #{DrbFunctions::SetupHiSpeedDataTransfer.cmd.chr.inspect} but got #{s.inspect}"
-    # end
+    s = @io.read_timeout(1, 1)
+    if s != DrbFunctions::SetupHiSpeedDataTransfer.cmd.chr then
+      raise "Expected #{DrbFunctions::SetupHiSpeedDataTransfer.cmd.chr.inspect} but got #{s.inspect}"
+    end
     @fastserial = true
   end
 
@@ -133,11 +133,21 @@ class DRBII
     addr = memory_location.address + offset
 
     @io.write([addr].pack('C'))
-    s = @io.read_timeout(1, 1)
+    s = @io.read_timeout(1, 1) # echo back memory address (TODO: validate)
+    s = @io.read_timeout(1, 1) # then get the actual result
 
     @logger.info("send_memory_location_fastserial -> #{s.inspect}")
 
     return s.unpack('C')
+  end
+
+  def confirm_fastserial_mode
+    raise "Not in fastserial mode" if not @fastserial
+
+    @io.write("\xf2")
+    s = @io.read_timeout(1, 1)
+
+    return s == "\xf2"
   end
 
   def exit_fastserial_mode
