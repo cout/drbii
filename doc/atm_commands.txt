@@ -1,0 +1,151 @@
+SetupATM:
+  b = TimerOverflowsBetweenDistPulses
+  if b > 0x28 and b55_O2Enable is not set in BitFlags_55:
+    if DRBPointer2 <= 0x19:
+      # L1265
+      ATMOffset = DRBPointer2 (a)
+      if ATMFunctionTable[ATMOffset] != ATM_Return:
+        goto [ ATMFunctionTable[ATMOffset] ]
+      else:
+        goto SerialOutput1
+
+  # L1264
+  clear b55_O2Enable in BitFlags_55
+  DRBPointer1 = 0
+  goto SerialOutput1
+    
+ATM commands:
+  - at start of atm subroutine:
+    a = DRBPointer2 ?
+    b = ATMFunctionTable[DRBPointer2] ?
+
+  - ATM_FanRelay:
+    a &= ~ $%11101111
+    if $%01111110 is not clear in Counter_MainLoop:
+      a |= $%00010000
+    goto ATM_SetOutputBits
+
+  - ATM_ASDRelay:
+    CPU_TimerControlReg1 &= $%00111110
+    CPU_TimerForceCompare = 0x08
+    a |= pia1abuf_ASDRelay
+    if bit_bit7 is not set in Counter_MainLoop:
+      a &= ~pia1abuf_ASDRelay
+    goto ATM_SetOutputBits
+
+  - ATM_ACClutchRelay:
+    a |= pia1abuf_ASDRelay
+    if cfg_AC is set in CONFIG_ConfigurationFlags:
+      a &= pia1abuf_FanRelay
+    # L1278
+    if bit_bit7 is not set in Counter_MainLoop:
+      a &= ~pia1abuf_ACRelay
+    goto ATM_SetOutputBits
+
+  - ATM_PurgeSolenoid:
+    a |= pia1abuf_PurgeSolenoid
+    if bit_bit7 is not set in Counter_MainLoop:
+      a &= ~pia1abuf_PurgeSolenoid
+    goto ATM_SetOutputBits
+
+  - ATM_PTUIndicator:
+    a |= pia1abuf_PartThrotUnlock
+    if bit_bit7 is not set in Counter_MainLoop:
+      a &= ~pia1abuf_PartThrotUnlock
+    goto ATM_SetOutputBits
+
+  - ATM_SetOutputBits:
+    a = PIA1_A_Buffer
+    return
+
+  - ATM_SCServoSolenoid:
+    a |= pia1abuf_CruiseVent | pia1abuf_CruiseVacuum
+    if Counter_MainLoop >= 0x55:
+      a &= ~(pia1abuf_CruiseVent | pia1abuf_CruiseVacuum)
+      if Counter_MainLoop >= 0xaa:
+        a |= pia1abuf_CruiseVacuum
+    goto ATM_SetOutputBits
+
+  - ATM_EGRSolenoid:
+    a = BitFlags_2d & ~b2d_EGR
+    if bit_bit7 is not set in Counter_MainLoop:
+      a |= b2d_EGR
+    BitFlags_2d = a
+    return
+
+  - ATM_BaroSolenoid:
+    a = BitFlags_2d & !b2d_ReadBaroRequired
+    if bit_bit7 is not set in Counter_MainLoop:
+      a |= b2d_ReadBaroRequired
+    BitFlags2d = a
+    return
+
+  - ATM_AllSolenoidsRelays:
+    CPU_TimerControlReg1 &= $%00111110
+    CPU_TimerForceCompare = 0x08
+    a &= $%01001000
+    if bit_bit7 is not set in Counter_MainLoop:
+      a |= $%10110111
+      DesiredNewAisPosition = 0x70
+    else:
+      DesiredNewAisPosition = 0x10
+    PIA1_A_Buffer = a
+    a = BitFlags_2d | b2d_EGR | b2d_ReadBaroRequired
+    if bit_bit7 is not set in Counter_MainLoop:
+      a &= ~(b2d_EGR | b2d_ReadBaroRequired)
+      CurrentWastegateDutyCycle = 0
+    else:
+      CurrentWastegateDutyCycle = 0xc8
+    BitFlags_2d = a
+    # fallthrough to ATM_AlternatorField - BUG?
+
+  - ATM_AlternatorField:
+    a = PIA2_PortB_DataDirection
+    a &= ~pia2b_AlternatorField
+    if bit_bit7 is not set in Counter_MainLoop:
+      a |= pia2b_AlternatorField
+    PIA2_PortB_DataDirection = a
+    return
+
+  - ATM_Tachometer:
+    PIA2_PortA_DataDirection ^= pia2a_Tach
+    return
+
+  - ATM_AISMotorOpenClose:
+    if bit_bit7 is not set in Counter_MainLoop:
+      DesiredNewAisPosition = 0x70
+    else:
+      DesiredNewAisPosition = 0x10
+    return
+
+  - ATM_IgnitionCoil:
+    clear pia1abuf_ASDRelay in PIA1_A_Buffer
+    if (Counter_MainLoop << 1) == 0:
+      disable interrupts (sei)
+      CPU_TimerControlReg1 |= 0x03 # configure OC5 to set on successful compare
+      CPU_TimerForceCompare = 0x08
+      CPU_Timer_OC5_Dwell = CPU_TimerCounterRegHigh + 0x06d6 # 1.75ms coil charge time
+      CPU_TimerControlReg1 &= 0x3e # configure OC5 to clear on successful compare, OC2 (WG) unaffected by compare
+      re-enable interrupts (cli)
+    return
+
+  - ATM_InjBank1:
+    a = 0x3b
+    goto L1286
+
+  - ATM_InjBank2:
+    a = 0x2f
+    goto L1286
+
+  - L1286:
+    clear pia1abuf_ASDRelay in PIA1_A_Buffer
+    if (Counter_MainLoop << 1) == 0:
+      disable interrupts (sei)
+      CPU_TimerControlReg1 &= 0x2f
+      CPU_TimerForceCompare = 0x30
+      CPU_Timer_OC3_InjectorBDriver = CPU_TimerCounterRegHigh + 0x00fa # 0.25ms
+      CPU_Timer_OC3_InjectorADriver = CPU_TimerCounterRegHigh + 0x00fa # 0.25ms
+      CPU_TimerControlReg1 |= 0x3c
+      re-enable interrupts (cli)
+    return
+
