@@ -20,7 +20,7 @@ class MemoryMap
         case line
         when /^(.*?)\s*==\s*(.*?)\s*;MPScan;(.*)/
           full_name = $1
-          address = $2.to_i
+          address = Integer($2)
           fields = $3.split(';')
           location = MemoryLocation.new(address, *fields)
           locations[location.name] = location
