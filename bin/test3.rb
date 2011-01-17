@@ -13,6 +13,8 @@ if __FILE__ == $0 then
 
   drbii = DRBII.new(io)
   drbii.handshake()
-  puts mmap['RPM'].read(drbii)
+  drbii.setup_hispeed_data_transfer()
+  rpm = mmap['RPM'].read(drbii)
+  puts "RPM: #{rpm}"
 end
 
