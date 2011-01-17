@@ -480,3 +480,61 @@ ATM commands:
       re-enable interrupts (cli)
     return
 
+XmitRequestedRamLocation:
+  if opt_HiSpedLog is set in OPTN1_CalCustomOptionConfigFlags1:
+    # skip serial IO and CCD IO
+    goto L2022
+
+  elif bbe_FastSerial is not (?) set in DRBSerialMode:
+    # skip serial IO but not CCD IO
+    goto L1022
+
+  a = CPU_SerialStatus
+  a &= $%00001110
+  if a != 0:
+  else:
+    b = CPU_SerialData # read a byte
+    goto L1022 # skip write
+
+  else
+    # L1019
+    a &= $%00100000 # should be a no-nop, since a is 0?
+    if a == 0:
+      goto L1022
+    else:
+      b = CPU_SerialData # read byte
+
+      if b == 0xf2:
+        # echo back 0xf2 as confirmation of logger mode
+        goto L1021
+      elif b == 0xfe:
+        # kick serial port control back to the DRB routine
+        clear bits bbe_Fastserial and bbe_TestType3 and bbe_TestType2 in DRBSerialMode
+      else:
+        # L1020
+        b = MEM[b]
+        # fallthrough to L1021
+
+L1021:
+  CPU_SerialData = b
+  # fallthrough to L1022
+
+L1022:
+  jsr HandleCCDBusComs
+  # fallthrough to L2022
+
+L2022:
+  jsr CheckIfMapSensorHasStartedWorkingAgain
+  PIA2_PortB_ControlRegister ^= pia2b_OC1Toggle
+  sei # disable interrupts
+  CPU_TimerInterruptMask1 |= 0x80
+  rti # return from interrupt
+
+SetupHiSpeedDataTransfer:
+  set bit bbe_FastSerial in DRBSerialMode
+  DRBPointer1 = 0
+  while CPU_SerialStatus & 0x40 == 0:
+    busy loop
+  CPU_SerialBaudRate = BAUDHI_DRBBaudRateHi
+  return
+
