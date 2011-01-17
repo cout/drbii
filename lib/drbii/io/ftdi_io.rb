@@ -19,7 +19,7 @@ class FtdiIO
   end
 
   def read(n)
-    @logger.info "Reading"
+    @logger.info "Reading up to #{n} bytes"
     s = @ftdi.read_data(n)
     @logger.info "Read #{s.inspect}"
     return s

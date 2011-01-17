@@ -37,6 +37,7 @@ class DRBII
       raise RuntimeError, "Expected #{s.inspect} but got #{result.inspect}"
     end
 
+    @logger.info "Command byte was echoed back successfully; writing command arguments"
     args.each do |arg|
       # TODO: how to synchronize these writes?
       @io.write(arg.chr)
@@ -95,6 +96,9 @@ class DRBII
 
     do_cmd(DrbFunctions::Send16BitMemoryLocation, addr1, addr2)
     s = @io.read_timeout(1, 1)
+
+    @logger.info("send_16bit_memory_location -> #{s.inspect}")
+
     return s.unpack('C')
   end
 
