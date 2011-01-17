@@ -6,6 +6,8 @@ require 'drbii/protocol/diagnostics_data_sub_functions'
 require 'logger'
 
 class DRBII
+  attr_reader :fastserial
+
   # BAUD_LOWSPEED = 976
   # BAUD_HIGHSPEED = 7812
 
@@ -90,6 +92,14 @@ class DRBII
     do_cmd(DrbFunctions::SendDiagnosticDataToSCI, subfunc)
     s = @io.read_timeout(1, 1)
     return s.unpack('C')
+  end
+
+  def send_memory_location(memory_location, offset=0)
+    if @fastserial then
+      return send_memory_location_fastserial(memory_location, offset)
+    else
+      return send_16bit_memory_location(memory_location, offset)
+    end
   end
 
   def send_16bit_memory_location(memory_location, offset=0)
