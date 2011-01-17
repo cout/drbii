@@ -19,6 +19,10 @@ class DRBII
     @io = io
     @io.baudrate = baud
     @logger = Logger.new(STDOUT)
+
+    # TODO: use 0xf2 to verify whether we are in fastserial mode during
+    # the handshake
+    @fastserial = false
   end
 
   def handshake
@@ -26,6 +30,8 @@ class DRBII
   end
 
   def do_cmd(cmd, *args)
+    raise "Cannot send command #{cmd.inspect} while in fastserial mode" if @fastserial
+
     @logger.info "Sending command #{cmd.inspect} with args #{args.inspect}"
 
     s = cmd.cmd.chr
@@ -98,6 +104,31 @@ class DRBII
     s = @io.read_timeout(1, 1)
 
     @logger.info("send_16bit_memory_location -> #{s.inspect}")
+
+    return s.unpack('C')
+  end
+
+  def send_memory_location_fastserial(memory_location, offset=0)
+    raise "Not in fastserial mode" if not @fastserial
+
+    @logger.info("send_memory_location_fastserial(#{memory_location.inspect})")
+
+    # TODO: correct byte order?
+    addr = memory_location.address + offset
+
+    @io.write(addr)
+    s = @io.read_timeout(1, 1)
+
+    @logger.info("send_memory_location_fastserial -> #{s.inspect}")
+
+    return s.unpack('C')
+  end
+
+  def exit_fastserial_mode
+    raise "Not in fastserial mode" if not @fastserial
+
+    @io.write(0xfe.chr)
+    s = @io.read_timeout(1, 1)
 
     return s.unpack('C')
   end
