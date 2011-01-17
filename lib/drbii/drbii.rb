@@ -85,7 +85,14 @@ class DRBII
     return s.unpack('C')
   end
 
-  def send_16bit_memory_location(addr1, addr2)
+  def send_16bit_memory_location(memory_location, offset=0)
+    @logger.info("send_16bit_memory_location(#{memory_location.inspect})")
+
+    # TODO: correct byte order?
+    address_16bit = memory_location.address + offset
+    addr1 = (address_16bit & 0xFF00) >> 0xFF
+    addr2 = address_16bit & 0xFF
+
     do_cmd(DrbFunctions::Send16BitMemoryLocation, addr1, addr2)
     s = @io.read_timeout(1, 1)
     return s.unpack('C')
