@@ -122,10 +122,10 @@ DRBFunctionTable = [
   SetupHiSpeedDataTransfer,    ; test command 0x12
   SetupATM,                    ; test command 0x13
   SendDiagnosticDataToSCI,     ; test command 0x14
-  DRB_Return,                  ; test command 0x15 (?)
+  DRB_Return,                  ; test command 0x15 (send 16 bit memory location)
   SendECUIDToSCI,              ; test command 0x16
   ClearErrorCodes,             ; test command 0x17
-  DRB_Return,                  ; test command 0x18 (?)
+  DRB_Return,                  ; test command 0x18 (control ASD relay)
   DRB_Return,                  ; test command 0x19 (set min idle speed test)
   SwitchTest,                  ; test command 0x1A
   InitByteModeDownload,        ; test command 0x1B
@@ -140,17 +140,19 @@ DRBFunctionTable = [
 # be true then for 0x15 (?) and 0x1C (reset EMR), except that reset EMR has a
 # special exception in DRB_SendMemLocToSCI so that it doesn't send back a
 # memory location
-DRBSerialToggles = [
-  0x20, ; 2 bytes              ; test command 0x13
-  0x20, ; 2 bytes              ; test command 0x14
-  0x30, ; 3 bytes              ; test command 0x15
-  0x20, ; 2 bytes              ; test command 0x16
+
+;                                                     type2   type 3
+DRBSerialToggles = [           ;                     ------- --------
+  0x20, ; 2 bytes              ; test command 0x13              x
+  0x20, ; 2 bytes              ; test command 0x14              x
+  0x30, ; 3 bytes              ; test command 0x15      x       x
+  0x20, ; 2 bytes              ; test command 0x16              x
   0x00, ; 1 byte               ; test command 0x17
-  0x20, ; 2 bytes              ; test command 0x18
-  0x20, ; 2 bytes              ; test command 0x19
-  0x20, ; 2 bytes              ; test command 0x1A
+  0x20, ; 2 bytes              ; test command 0x18              x
+  0x20, ; 2 bytes              ; test command 0x19              x
+  0x20, ; 2 bytes              ; test command 0x1A              x
   0x00, ; 1 byte               ; test command 0x1B
-  0x30, ; 3 bytes              ; test command 0x1C
+  0x30, ; 3 bytes              ; test command 0x1C      x       x
 ]
 
 Main loop:
