@@ -8,6 +8,8 @@ class FtdiIO
     @ftdi.open(dev)
     @logger = Logger.new(STDOUT)
 
+    @ftdi.latency_timer = 1 # 1 ms?
+
     if bitbang then
       @ftdi.set_bitmode(0xFF, FtdiC::BITMODE_SYNCBB)
     end
