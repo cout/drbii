@@ -23,7 +23,7 @@ class FtdiIO
   def read(n)
     @logger.info "Reading up to #{n} bytes"
     s = @ftdi.read_data(n)
-    @logger.info "Read #{s.inspect}"
+    @logger.info "<-- #{s.inspect}"
     return s
   end
 
@@ -38,7 +38,7 @@ class FtdiIO
   end
 
   def write(s)
-    @logger.info "Writing #{s.inspect}"
+    @logger.info "--> #{s.inspect}"
     return @ftdi.write_data(s)
   end
 
